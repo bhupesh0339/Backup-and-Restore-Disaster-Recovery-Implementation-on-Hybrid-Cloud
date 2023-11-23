@@ -31,12 +31,12 @@ Ensure your local machine meets the following technology stack requirements:
 
 ## Getting Started
 
-### Setting up Production Infrastructure on AWS
+### Setting up main Infrastructure on AWS
 
 ![](.prod.gif)
 
 
-1. Navigate to the `Production-Infrastructure` directory.
+1. Navigate to the `main_infrastructure` directory in infrastructure_development branch
 2. Rename `terraform.tfvars.sample` to `terraform.tfvars`.
 3. Add all necessary credentials in `terraform.tfvars`.
 
@@ -51,10 +51,10 @@ terraform apply
 
 ![](.recovered.gif)
 
-#### In case of a disaster, switch to the Recovery-Infrastructure directory.
+#### In case of a disaster, switch to the recovery_infrastructure directory.
 
 ```bash
 terraform init
-terraform plan --var-file ../Production-Infrastructure/terraform.tfvars
-terraform apply --var-file ../Production-Infrastructure/terraform.tfvars
+terraform plan --var-file ../main_infrastructure/terraform.tfvars
+terraform apply --var-file ../main_infrastructure/terraform.tfvars
 ```
