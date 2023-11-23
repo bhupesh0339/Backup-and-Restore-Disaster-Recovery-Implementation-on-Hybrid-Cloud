@@ -33,7 +33,7 @@ Ensure your local machine meets the following technology stack requirements:
 
 ### Setting up main Infrastructure on AWS
 
-![](.prod.gif)
+![](.main.gif)
 
 
 1. Navigate to the `main_infrastructure` directory in infrastructure_development branch
@@ -49,7 +49,7 @@ terraform apply
 ```
 ### Disaster Recovery Procedure
 
-![](.recovered.gif)
+![](.recovery.gif)
 
 #### In case of a disaster, switch to the recovery_infrastructure directory.
 
