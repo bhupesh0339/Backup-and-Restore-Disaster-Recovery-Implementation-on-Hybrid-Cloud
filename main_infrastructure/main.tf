@@ -28,12 +28,12 @@ provider "cloudflare" {
   api_token = var.cloudflare-api-token-value
 }
 module "azure_backup_resource_group" {
-  source                          = "./azure/resource_group"
+  source                          = "./modules/azure/resource_group"
   azurerm_resource_group-name     = "databackup1000"
   azurerm_resource_group-location = "West Europe"
 }
 module "backup_storage_account" {
-  source                                           = "./azure/storage_account"
+  source                                           = "./modules/azure/storage_account"
   azurerm_storage_account_name                     = var.backup_storage_account_name
   azurerm_storage_account_account_tier             = "Standard"
   azurerm_storage_account_account_replication_type = "GRS"
@@ -41,18 +41,18 @@ module "backup_storage_account" {
   resource_group_location                          = module.azure_backup_resource_group.resource_group_location
 }
 module "azure_storage_container" {
-  source                 = "./azure/storage_container"
+  source                 = "./modules/azure/storage_container"
   storage_container_name = var.backup_container_name
   storage_account_name   = module.backup_storage_account.storage_account_name
   container_access_type  = "private"
 }
 module "databackup1000_sas_token" {
-  source                            = "./azure/SAS_token"
+  source                            = "./modules/azure/SAS_token"
   storage_account_connection_string = module.backup_storage_account.primary_connection_string
 }
 module "prod_rds_mysql" {
-  source             = "./aws/rds"
-  storage_size       = [10]
+  source             = "./modules/aws/rds"
+  storage_size       = "10"
   db_name            = var.database_name
   instance_class     = "db.t3.micro"
   db_username        = var.rds_prod_db_username
@@ -62,17 +62,17 @@ module "prod_rds_mysql" {
   depends_on         = [module.rds_security_group]
 }
 module "production_instance_1_keypair" {
-  source         = "./aws/key_pair"
+  source         = "./modules/aws/key_pair"
   key_pair_name  = "production_instance_1_keypair"
   public_ssh_key = file("~/.ssh/id_rsa.pub")
 }
 module "prod_instance_security_group" {
-  source                    = "./aws/security_group"
+  source                    = "./modules/aws/security_group"
   security_group_name       = "prod_instance_security_group"
   security_group_open_ports = [80, 443, 22]
 }
 module "cloudflare_domain_terraform" {
-  source                  = "./cloudflare"
+  source                  = "./modules/cloudflare"
   cloudflare-zone-id      = var.cloudflare-zone-id
   cloudflare-domain-name  = "aws.testmyinfra.com"
   cloudflare-ipv4-address = module.prod_instance_1.instance_public_ip
@@ -80,12 +80,12 @@ module "cloudflare_domain_terraform" {
   cloudflare-api-token    = var.cloudflare-api-token-value
 }
 module "rds_security_group" {
-  source                    = "./aws/security_group"
+  source                    = "./modules/aws/security_group"
   security_group_name       = "rds_public_security_group"
   security_group_open_ports = [3306]
 }
 module "prod_instance_1" {
-  source                 = "./aws/instance"
+  source                 = "./modules/aws/instance"
   instance-type          = "t2.large"
   key_pair_name          = module.production_instance_1_keypair.keypair_name
   vpc_security_group_ids = [module.prod_instance_security_group.security_group_id]
@@ -96,7 +96,7 @@ resource "null_resource" "configure_instance_2" {
   provisioner "local-exec" {
     command = <<-EOT
     sleep 2m
-    ansible-playbook --ssh-extra-args='-o StrictHostKeyChecking=no' -i '${module.prod_instance_1.instance_public_ip},' -e 'private_key=~/.ssh/id_rsa domain_name=${module.cloudflare_domain_terraform.domain_name} ssl_email=${var.certbot-ssl-email} gitrepo=${var.git_repo_https_url} git_branch=${var.git_repo_application_branch} git_token=${var.github_token} db_host=${module.prod_rds.db_endpoint} db_user=${var.rds_prod_db_username}  db_password=${var.rds_prod_db_password} azureStorageAccountName=${module.backup_storage_account.storage_account_name} db_database=${var.database_name} azureContainerName=${module.azure_storage_container.container_name} sas_token=${module.databackup1000_sas_token.sas_url_query_string} ' -u ubuntu ./ansible/playbook.yml -vvv
+    ansible-playbook --ssh-extra-args='-o StrictHostKeyChecking=no' -i '${module.prod_instance_1.instance_public_ip},' -e 'private_key=~/.ssh/id_rsa domain_name=${module.cloudflare_domain_terraform.domain_name} ssl_email=${var.certbot-ssl-email} gitrepo=${var.git_repo_https_url} git_branch=${var.git_repo_application_branch} git_token=${var.github_token} db_host=${module.prod_rds_mysql.db_endpoint} db_user=${var.rds_prod_db_username}  db_password=${var.rds_prod_db_password} azureStorageAccountName=${module.backup_storage_account.storage_account_name} db_database=${var.database_name} azureContainerName=${module.azure_storage_container.container_name} sas_token=${module.databackup1000_sas_token.sas_url_query_string} ' -u ubuntu ./ansible/playbook.yml -vvv
   EOT
   }
 }
