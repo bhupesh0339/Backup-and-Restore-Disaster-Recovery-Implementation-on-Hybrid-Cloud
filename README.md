@@ -4,13 +4,23 @@
 
 This project aims to provide a robust and scalable solution for disaster recovery by implementing a hybrid cloud approach. Leveraging the power of Terraform, AWS Cloud, Azure Cloud, Cloudflare, Ansible, Python, ShellScripts, Nginx, Certbot, Node.js, AWS RDS MySQL, and Azure MySQL DB, the Backup and Restore Disaster Recovery Implementation ensures the continuity of critical applications in the event of a disaster.
 
-### Project Structure
+### Branch Structure
 
-The project is organized into three major directories:
+The project is organized into 2 branches major directories:
 
-1. **Production-Infrastructure:** Contains Terraform code for the production infrastructure on AWS.
-2. **Recovery-Infrastructure:** Holds Terraform code for the disaster recovery infrastructure on Azure.
-3. **nodejs-application:** Includes the Node.js basic application code.
+1. **development:** contains nodejs application which input current date and time in mysql database
+2.  **infrastructure_development:** Terraform code for main infrastructure and recovery infrastructure
+
+     
+### Code Structure
+
+## development branch contains nodejs code
+
+## infrastructure_development branch contains 2 directories
+
+1. **main_infrastructure:** Contains Terraform code for the main infrastructure on AWS.
+2. **recovery_infrastructure:** Holds Terraform code for the recovered infrastructure on Azure.
+
 
 ## Local Development Requirements
 
