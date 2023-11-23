@@ -1,0 +1,17 @@
+current_date=$(date "+%d-%m-%Y-%I-%M-%p")
+DB_HOST='{{ modified_url }}'
+DB_USER='{{ db_user }}'
+DB_PASSWORD='{{ db_password }}'
+DB_NAME='{{ db_database }}'
+azure_sas_token='{{ sas_token }}'
+azureStorageAccountName='{{ azureStorageAccountName }}'
+azureContainerName='{{ azureContainerName }}'
+new_file="${current_date}.sql"
+backup_directory="/opt/Backup"
+mysqldump --set-gtid-purged=OFF -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" time_entries > "$backup_directory/Backup.sql"
+echo "Dump Created"
+mv $backup_directory/Backup.sql  $new_file
+echo "Dump Renamed"
+az storage blob upload --container-name "$azureContainerName" --account-name "$azureStorageAccountName" --name "$new_file" --file "$backup_directory/$new_file" --sas-token "$azure_sas_token"
+echo "Dump Uploaded"
+rm -rf /opt/Backup/$new_file

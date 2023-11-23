@@ -1,0 +1,20 @@
+aws-access-key                    = ""
+aws-secret-key                    = ""
+aws-region-main                   = ""
+cloudflare-api-token-value        = ""
+cloudflare-zone-id                = ""
+rds_prod_db_password              = ""
+rds_prod_db_username              = ""
+database_name                     = ""
+certbot-ssl-email                 = ""
+git_repository_python_app         = ""
+github_token                      = ""
+azure-uploadfile-account-username = ""
+azure-uploadfile-account-password = ""
+
+###################  Recovery Infrastructure Variables
+
+azure_db_password           = ""
+azure_db_username           = ""
+backup_storage_account_name = ""
+backup_container_name       = ""

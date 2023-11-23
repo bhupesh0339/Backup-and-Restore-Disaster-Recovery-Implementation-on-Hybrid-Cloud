@@ -1,0 +1,138 @@
+---
+- name: Setup Application
+  hosts: all
+  become: true
+  tasks:
+    - name: Update repo cache
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items:
+        - git
+        - nginx
+        - nodejs
+        - net-tools
+        - python3-certbot-nginx
+        - python3-pip
+        - mysql-client-8.0
+        - npm
+
+    - name: Remove 'https://' from repository URL
+      set_fact:
+        repo_url: "{{ gitrepo | regex_replace('https:\/\/', '@') }}"
+
+    - name: Add github token to url 'https://' to token for cloning
+      set_fact:
+        new_token: "https://{{ git_token }}"
+
+    - name: Remove the port form the end of RDS endpoint
+      set_fact:
+        modified_url: "{{ db_host | regex_replace(':\\d+$', '') }}"
+
+    - name: Install Azure CLI with their provided script
+      shell: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+    - name: Clone the code
+      shell: rm -rf /home/ubuntu/nodejs && git clone {{ new_token }}{{ repo_url }} /home/ubuntu/nodejs
+
+    - name: Create .env file with environment variables
+      template:
+        src: templates/env.j2
+        dest: /home/ubuntu/nodejs/.env
+      vars:
+        db_host: "{{ modified_url }}"
+        db_user: "{{ db_user }}"
+        db_password: "{{ db_password }}"
+        db_database: "{{ db_database }}"
+
+    - name: Install Nodejs Packages
+      shell: |
+        npm install
+      args:
+        executable: /bin/bash
+        chdir: /home/ubuntu/nodejs
+      become: yes
+      become_user: root
+
+    - name: Setup system.d Service File
+      template:
+        src: templates/servicefile.j2
+        dest: /etc/systemd/system/hybridapp.service
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable nodejs application service
+      systemd:
+        name: hybridapp
+        enabled: yes
+
+    - name: Remove the default Nginx conf file
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent    
+
+    - name: Setup Nginx vHost file
+      template:
+        src: templates/nodejs.conf.j2
+        dest: /etc/nginx/conf.d/nodejs.conf
+      vars:
+        domain_name: "{{ domain_name }}"
+
+    - name: Generate Free SSL for Website
+      command: sudo certbot --nginx -d {{ domain_name }} --non-interactive --agree-tos -m {{ ssl_email }} 
+      become: yes
+
+    - name: Create Automated Backup Directory
+      ansible.builtin.file:
+        path: /opt/Backup
+        state: directory
+        owner: root
+        group: root
+        mode: '0777'
+        recurse: yes
+      become: yes
+
+    - name: Configure backup script to use database and azure credentials for creating and uploading dumps to azure container
+      template:
+        src: templates/backup-script.sh.j2
+        dest: /opt/Backup/Backup.sh
+      become: yes
+      vars:
+        db_host: "{{ modified_url }}"
+        db_user: "{{ db_user }}"
+        db_password: "{{ db_password }}"
+        db_database: "{{ db_database }}"
+        azureUserName: "{{ azureUserName }}"
+        azurePassword: "{{ azurePassword }}"
+        azureStorageAccountName: "{{ azureStorageAccountName }}"
+        azureContainerName: "{{ azureContainerName }}"
+        sas_token: "{{ sas_token }}"
+
+    - name: Make the script executable
+      file:
+        path: "/opt/Backup/Backup.sh"
+        mode: 'u+x,g+x,o+x'
+
+    - name: Set up cron job to run the backup script every 30 minutes
+      cron:
+        name: Run Backup.sh every 30 minutes
+        minute: '*/30'
+        job: /opt/Backup/Backup.sh
+
+    - name: stop the service if already running
+      systemd:
+        name: hybridapp
+        state: started
+      ignore_errors: true
+
+    - name: Start nodejs application service
+      systemd:
+        name: hybridapp
+        state: restarted

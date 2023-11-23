@@ -1,0 +1,8 @@
+#!/bin/bash
+az storage blob list --container-name {{ azureContainerName }} --output json --account-name {{ azureStorageAccountName }} --sas-token "{{ sas_token }}" > /opt/Backup/data.json
+python3 /opt/Backup/getBlobName.py
+final_blob_name=$(cat /opt/Backup/latest_name)
+az storage blob download --container-name {{ azureContainerName }} --account-name {{ azureStorageAccountName }} --sas-token "{{ sas_token }}"  --name $final_blob_name --file /opt/Backup/LatestDump.sql
+mysql -h {{ db_host }} -u {{ azure_db_username }} -p{{ db_password }} -e "CREATE DATABASE {{ db_name }};";
+mysql -h {{ db_host }} -u {{ azure_db_username }} -p{{ db_password }} {{ db_name }} < /opt/Backup/LatestDump.sql
+rm -rf /opt/Backup/latest_name /opt/Backup/data.json /opt/Backup/LatestDump.sql || true
