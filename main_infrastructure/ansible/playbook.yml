@@ -7,6 +7,18 @@
       apt:
         update_cache: yes
 
+    - name: Remove 'https://' from repository URL
+      set_fact:
+        repo_url: "{{ gitrepo | regex_replace('https:\/\/', '@') }}"
+
+    - name: Add github token to url 'https://' to token for cloning
+      set_fact:
+        new_token: "https://{{ git_token }}"
+
+    - name: Remove the port form the end of RDS endpoint
+      set_fact:
+        modified_url: "{{ db_host | regex_replace(':\\d+$', '') }}"
+
     - name: Install required packages
       apt:
         name: "{{ item }}"
@@ -22,23 +34,14 @@
         - mysql-client-8.0
         - npm
 
-    - name: Remove 'https://' from repository URL
-      set_fact:
-        repo_url: "{{ gitrepo | regex_replace('https:\/\/', '@') }}"
-
-    - name: Add github token to url 'https://' to token for cloning
-      set_fact:
-        new_token: "https://{{ git_token }}"
-
-    - name: Remove the port form the end of RDS endpoint
-      set_fact:
-        modified_url: "{{ db_host | regex_replace(':\\d+$', '') }}"
+    - name: Clone the repository with a specific branch
+      git:
+        repo: "{{ new_token }}{{ repo_url }}"
+        dest: /home/ubuntu/nodejs
+        version: "{{ git_branch }}"
 
     - name: Install Azure CLI with their provided script
       shell: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
-    - name: Clone the code
-      shell: rm -rf /home/ubuntu/nodejs && git clone {{ new_token }}{{ repo_url }} /home/ubuntu/nodejs
 
     - name: Create .env file with environment variables
       template:
@@ -61,8 +64,8 @@
 
     - name: Setup system.d Service File
       template:
-        src: templates/servicefile.j2
-        dest: /etc/systemd/system/hybridapp.service
+        src: templates/systemd_service.j2
+        dest: /etc/systemd/system/dev-app.service
 
     - name: Reload systemd daemon
       systemd:
@@ -70,7 +73,7 @@
 
     - name: Enable nodejs application service
       systemd:
-        name: hybridapp
+        name: dev-app
         enabled: yes
 
     - name: Remove the default Nginx conf file
@@ -80,7 +83,7 @@
 
     - name: Setup Nginx vHost file
       template:
-        src: templates/nodejs.conf.j2
+        src: templates/dev_app_nginx_conf.j2
         dest: /etc/nginx/conf.d/nodejs.conf
       vars:
         domain_name: "{{ domain_name }}"
@@ -101,7 +104,7 @@
 
     - name: Configure backup script to use database and azure credentials for creating and uploading dumps to azure container
       template:
-        src: templates/backup-script.sh.j2
+        src: templates/database_backup_script.j2
         dest: /opt/Backup/Backup.sh
       become: yes
       vars:
@@ -126,13 +129,7 @@
         minute: '*/30'
         job: /opt/Backup/Backup.sh
 
-    - name: stop the service if already running
-      systemd:
-        name: hybridapp
-        state: started
-      ignore_errors: true
-
     - name: Start nodejs application service
       systemd:
-        name: hybridapp
+        name: dev-app
         state: restarted
