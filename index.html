@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timestamp Entries</title>
+</head>
+<body>
+<div id="entries-container"></div>
+<script>
+function fetchEntries() {
+    fetch('/')
+        .then(response => response.json())
+        .then(entries => {
+            const entriesContainer = document.getElementById('entries-container');
+            entriesContainer.innerHTML = entries.map(entry => `<p>ID: ${entry.id}, Timestamp: ${entry.timestamp}</p>`).join('');
+            entriesContainer.innerHTML += '<br>';
+        })
+        .catch(error => console.error('Error fetching entries:', error));
+}
+fetchEntries();
+setInterval(fetchEntries, 60000);
+</script>
+</body>
+</html>

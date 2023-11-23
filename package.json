@@ -1,0 +1,16 @@
+{
+    "name": "mysql-nodejs-app",
+    "version": "1.0.0",
+    "description": "Node.js app to upload current date and time to MySQL database",
+    "main": "app.js",
+    "scripts": {
+      "start": "node app.js"
+    },
+    "dependencies": {
+      "express": "^4.17.1",
+      "mysql": "^2.18.1",
+      "node-cron": "^3.0.0",
+      "dotenv": "^10.0.0"
+    }
+  }
+  
