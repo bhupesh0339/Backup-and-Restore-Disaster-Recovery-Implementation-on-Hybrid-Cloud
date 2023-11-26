@@ -3,16 +3,6 @@
   hosts: all
   become: true
   gather_facts: false
-  vars:
-    azure_db_username: "{{ db_user | quote }}@{{ db_database | quote }}"
-    storage_account_name: "{{ azureStorageAccountName }}"
-    container_name: "{{ azureContainerName }}"
-    sas_token:  "{{ sas_token }}"
-    destination_path: "/opt/Backup"
-    db_host: "{{ db_host }}"
-    db_user: "{{ azure_db_username }}"
-    db_name: "{{ db_database }}"
-    db_password: "{{ db_password }}"
   tasks:
     - name: Update apt cache
       apt:
@@ -32,40 +22,44 @@
         - python3-pip
         - mysql-client-8.0
         - npm
-        
-    - name: Install Azure CLI with their provided script
-      shell: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
-    - name: Create Automated Backup Directory
-      ansible.builtin.file:
-        path: /opt/Backup
-        state: directory
-        owner: root
-        group: root
-        mode: '0777'
-        recurse: yes
-      become: yes        
 
     - name: Remove 'https://' from repository URL
       set_fact:
         repo_url: "{{ gitrepo | regex_replace('https:\/\/', '@') }}"
 
-    - name: Add github token to url 'https://' to token
+    - name: Add github token to url 'https://' to token for cloning
       set_fact:
         new_token: "https://{{ git_token }}"
 
-    - name: Clone
-      shell: rm -rf /home/alpha/nodejs && git clone {{ new_token }}{{ repo_url }} /home/alpha/nodejs
+    - name: Install Azure CLI with their provided script
+      shell: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+    - name: Create Automated Restore Directory
+      ansible.builtin.file:
+        path: /opt/Restore
+        state: directory
+        owner: root
+        group: root
+        mode: '0777'
+        recurse: yes
+      become: yes   
+
+    - name: Clone the repository with a specific branch
+      git:
+        repo: "{{ new_token }}{{ repo_url }}"
+        dest: /home/alpha/nodejs
+        version: "{{ git_branch }}"
 
     - name: Create .env file with environment variables
       template:
         src: templates/env.j2
         dest: /home/alpha/nodejs/.env
       vars:
-        db_host: "{{ modified_url }}"
-        db_user: "{{ db_user }}"
+        azure_db_username: "{{ db_user | quote }}@{{ db_database | quote }}"
+        db_host: "{{ db_host }}"
         db_password: "{{ db_password }}"
         db_database: "{{ db_database }}"
+        db_user: "{{ azure_db_username }}"
 
     - name: Install Nodejs Packages
       shell: |
@@ -78,8 +72,8 @@
 
     - name: Setup system.d Service File
       template:
-        src: templates/servicefile.j2
-        dest: /etc/systemd/system/hybridapp.service
+        src: templates/systemd_service.j2
+        dest: /etc/systemd/system/dev-app.service
 
     - name: Reload systemd daemon
       systemd:
@@ -87,7 +81,7 @@
 
     - name: Enable nodejs application service
       systemd:
-        name: hybridapp
+        name: dev-app
         enabled: yes
 
     - name: Remove default Nginx file
@@ -95,9 +89,9 @@
         path: /etc/nginx/sites-enabled/default
         state: absent    
 
-    - name: Setup Nginx File
+    - name: Setup Nginx vHost file
       template:
-        src: templates/nodejs.conf.j2
+        src: templates/dev_app_nginx_conf.j2
         dest: /etc/nginx/conf.d/nodejs.conf
       vars:
         domain_name: "{{ domain_name }}"
@@ -106,53 +100,42 @@
       command: sudo certbot --nginx -d {{ domain_name }} --non-interactive --agree-tos -m {{ ssl_email }} 
       become: yes
 
-    - name: stop the service if already running
-      systemd:
-        name: hybridapp
-        state: started
-      ignore_errors: true
-
     - name: Start nodejs application service
       systemd:
-        name: hybridapp
+        name: dev-app
         state: restarted
 
     - name: Change Script values.
       template:
-        src: templates/Restore-script.sh.j2
-        dest: /opt/Backup/restore.sh
+        src: templates/restore.j2
+        dest: /opt/Restore/restore.sh
       become: yes
       vars:
         azure_db_username: "{{ db_user | quote }}@{{ db_database | quote }}"
         storage_account_name: "{{ azureStorageAccountName }}"
         container_name: "{{ azureContainerName }}"
         sas_token:  "{{ sas_token }}"
-        destination_path: "/opt/Backup"
+        destination_path: "/opt/Restore"
         db_host: "{{ db_host }}"
         db_user: "{{ azure_db_username }}"
         db_name: "{{ db_database }}"
         db_password: "{{ db_password }}"       
 
-    - name: Create .env file with environment variables
-      template:
-        src: templates/env.j2
-        dest: /home/alpha/nodejs/.env
-      vars:
-        azure_db_username: "{{ db_user | quote }}@{{ db_database | quote }}"
-        db_host: "{{ db_host }}"
-        db_user: "{{ azure_db_username }}"
-        db_password: "{{ db_password }}"
-        db_database: "{{ db_database }}"
-
     - name: Copy the Python script
       template:
-        src: templates/getLatestBlob.py.j2
-        dest: /opt/Backup/getBlobName.py
+        src: templates/getLatestBlob.j2
+        dest: /opt/Restore/getBlobName.py
+
+
+    - name: Make the script executable
+      file:
+        path: "/opt/Restore/restore.sh"
+        mode: 'u+x,g+x,o+x'
 
     - name: Get the AzureJsonData
-      command: bash /opt/Backup/restore.sh
+      command: bash /opt/Restore/restore.sh
 
     - name: Start nodejs application service
       systemd:
-        name: hybridapp
+        name: dev-app
         state: restarted

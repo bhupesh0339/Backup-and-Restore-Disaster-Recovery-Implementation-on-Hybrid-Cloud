@@ -92,9 +92,9 @@ module "cloudflare-domain" {
 locals {
   sas_token = file("./sas_token")
 }
-resource "null_resource" "setup_vm_prod" {
+resource "null_resource" "setup_vm_prod3" {
   depends_on = [module.azure_prod_vm1]
   provisioner "local-exec" {
-    command = "ansible-playbook --ssh-extra-args='-o StrictHostKeyChecking=no' -i '${module.azure_prod_vm1.vm_public_ip},' -e 'domain_name=${module.cloudflare-domain.domain_name} ssl_email=${var.certbot-ssl-email} gitrepo=${var.git_repository_python_app} git_token=${var.github_token} db_host=${module.azure-mysql-db.production-db-endpoint} db_user=${var.azure_db_username}  db_password=${var.azure_db_password} azureStorageAccountName=${var.backup_storage_account_name} db_database=${var.database_name} azureContainerName=${var.backup_container_name} sas_token=${local.sas_token} ' -u ${module.azure_prod_vm1.vm_username} ./ansible/playbook.yml -vvv"
+    command = "ansible-playbook --ssh-extra-args='-o StrictHostKeyChecking=no' -i '${module.azure_prod_vm1.vm_public_ip},' -e 'domain_name=${module.cloudflare-domain.domain_name} ssl_email=${var.certbot-ssl-email} gitrepo=${var.git_repo_https_url} git_branch=${var.git_repo_application_branch}  git_token=${var.github_token} db_host=${module.azure-mysql-db.production-db-endpoint} db_user=${var.azure_db_username}  db_password=${var.azure_db_password} azureStorageAccountName=${var.backup_storage_account_name} db_database=${var.database_name} azureContainerName=${var.backup_container_name} sas_token=${local.sas_token} ' -u ${module.azure_prod_vm1.vm_username} ./ansible/playbook.yml -vvv"
   }
 }

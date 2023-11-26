@@ -1,0 +1,12 @@
+import json
+with open('/opt/Restore/data.json', 'r') as json_file:
+    json_data = json.load(json_file)
+latest_creation_time = None
+latest_name = None
+for entry in json_data:
+    creation_time = entry["properties"]["creationTime"]
+    if latest_creation_time is None or creation_time > latest_creation_time:
+        latest_creation_time = creation_time
+        latest_name = entry["name"]
+with open('/opt/Restore/latest_name', 'w') as bob_name_file:
+    bob_name_file.write(latest_name)

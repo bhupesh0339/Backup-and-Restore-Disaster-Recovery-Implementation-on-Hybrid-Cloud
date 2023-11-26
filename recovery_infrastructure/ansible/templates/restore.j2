@@ -1,0 +1,7 @@
+#!/bin/bash
+/usr/bin/az storage blob list --container-name {{ azureContainerName }} --output json --account-name {{ azureStorageAccountName }} --sas-token "{{ sas_token }}" > /opt/Restore/data.json
+/usr/bin/python3 /opt/Restore/getBlobName.py
+final_blob_name=$(cat /opt/Restore/latest_name)
+az storage blob download --container-name {{ azureContainerName }} --account-name {{ azureStorageAccountName }} --sas-token "{{ sas_token }}"  --name $final_blob_name --file /opt/Restore/LatestDump.sql
+mysql -h {{ db_host }} -u {{ azure_db_username }} -p{{ db_password }} {{ db_name }} < /opt/Restore/LatestDump.sql
+rm -rf /opt/Restore/data.json /opt/Restore/LatestDump.sql || true
