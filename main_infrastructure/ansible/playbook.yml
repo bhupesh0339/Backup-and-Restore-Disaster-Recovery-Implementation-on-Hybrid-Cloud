@@ -88,6 +88,9 @@
       vars:
         domain_name: "{{ domain_name }}"
 
+
+        
+
     - name: Generate Free SSL for Website
       command: sudo certbot --nginx -d {{ domain_name }} --non-interactive --agree-tos -m {{ ssl_email }} 
       become: yes
