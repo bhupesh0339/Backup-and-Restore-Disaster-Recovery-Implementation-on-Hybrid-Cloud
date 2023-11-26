@@ -105,3 +105,39 @@ resource "null_resource" "send-sas-token-for-recovery" {
     command = "terraform output sas-token > ../recovery_infrastructure/sas_token"
   }
 }
+locals {
+  db_endpoint_without_port = join(":", slice(split(":", module.prod_rds_mysql.db_endpoint), 0, 1))
+}
+
+resource "aws_lambda_function" "backup_mysql_lambda" {
+  function_name    = "backup_mysql_dump"
+  runtime          = "python3.9"
+  handler = "lambda_function.lambda_handler"
+  timeout = "30"
+  filename         = "./dbdump_lambda_function/lambda.zip"
+  role             = aws_iam_role.lambda_execution_role.arn
+  environment {
+    variables = {
+      DB_HOST              = local.db_endpoint_without_port,
+      DB_USER              = var.rds_prod_db_username,
+      DB_PASSWORD          = var.rds_prod_db_password,
+      DB_NAME              = var.database_name,
+      azure_sas_token      = module.databackup1000_sas_token.sas_url_query_string,
+      azureStorageAccountName = module.backup_storage_account.storage_account_name,
+      azureContainerName   = module.azure_storage_container.container_name,
+    }
+  }
+}
+resource "aws_scheduler_schedule" "invoke_lambda" {
+  name       = "create_dump_sch"
+  group_name = "default"
+  flexible_time_window {
+    mode = "OFF"
+  }
+  schedule_expression = "cron(0/3 * * * ? *)"
+  target {
+    arn      = aws_lambda_function.backup_mysql_lambda.arn
+    role_arn = aws_iam_role.lambda_invoke_schedular_role.arn
+  }
+depends_on = [ aws_lambda_function.backup_mysql_lambda ]
+}

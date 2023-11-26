@@ -88,49 +88,9 @@
       vars:
         domain_name: "{{ domain_name }}"
 
-
-        
-
     - name: Generate Free SSL for Website
       command: sudo certbot --nginx -d {{ domain_name }} --non-interactive --agree-tos -m {{ ssl_email }} 
       become: yes
-
-    - name: Create Automated Backup Directory
-      ansible.builtin.file:
-        path: /opt/Backup
-        state: directory
-        owner: root
-        group: root
-        mode: '0777'
-        recurse: yes
-      become: yes
-
-    - name: Configure backup script to use database and azure credentials for creating and uploading dumps to azure container
-      template:
-        src: templates/database_backup_script.j2
-        dest: /opt/Backup/Backup.sh
-      become: yes
-      vars:
-        db_host: "{{ modified_url }}"
-        db_user: "{{ db_user }}"
-        db_password: "{{ db_password }}"
-        db_database: "{{ db_database }}"
-        azureUserName: "{{ azureUserName }}"
-        azurePassword: "{{ azurePassword }}"
-        azureStorageAccountName: "{{ azureStorageAccountName }}"
-        azureContainerName: "{{ azureContainerName }}"
-        sas_token: "{{ sas_token }}"
-
-    - name: Make the script executable
-      file:
-        path: "/opt/Backup/Backup.sh"
-        mode: 'u+x,g+x,o+x'
-
-    - name: Set up cron job to run the backup script every 30 minutes
-      cron:
-        name: Run Backup.sh every 30 minutes
-        minute: '*/30'
-        job: /opt/Backup/Backup.sh
 
     - name: Start nodejs application service
       systemd:
