@@ -16,8 +16,6 @@ variable "certbot-ssl-email" {}
 variable "git_repo_https_url" {}
 variable "git_repo_application_branch" {}
 variable "github_token" {}
-variable "azure-uploadfile-account-username" {}
-variable "azure-uploadfile-account-password" {}
 variable "backup_storage_account_name" {}
 variable "backup_container_name" {}
 variable "azure_db_password" {}

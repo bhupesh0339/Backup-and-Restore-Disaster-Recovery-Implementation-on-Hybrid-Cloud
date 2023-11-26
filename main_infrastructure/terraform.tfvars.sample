@@ -7,11 +7,10 @@ rds_prod_db_password              = ""
 rds_prod_db_username              = ""
 database_name                     = ""
 certbot-ssl-email                 = ""
-git_repository_python_app         = ""
+git_repo_https_url                = ""
 git_repo_application_branch       = ""
 github_token                      = ""
-azure-uploadfile-account-username = ""
-azure-uploadfile-account-password = ""
+
 
 ###################  Recovery Infrastructure Variables
 

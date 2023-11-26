@@ -95,8 +95,7 @@ resource "null_resource" "configure_instance_2" {
   depends_on = [module.prod_instance_1]
   provisioner "local-exec" {
     command = <<-EOT
-    sleep 4m
-    ansible-playbook --ssh-extra-args='-o StrictHostKeyChecking=no' -i '${module.prod_instance_1.instance_public_ip},' -e 'private_key=~/.ssh/id_rsa domain_name=${module.cloudflare_domain_terraform.domain_name} ssl_email=${var.certbot-ssl-email} gitrepo=${var.git_repo_https_url} git_branch=${var.git_repo_application_branch} git_token=${var.github_token} db_host=${module.prod_rds_mysql.db_endpoint} db_user=${var.rds_prod_db_username}  db_password=${var.rds_prod_db_password} azureStorageAccountName=${module.backup_storage_account.storage_account_name} db_database=${var.database_name} azureContainerName=${module.azure_storage_container.container_name} sas_token=${module.databackup1000_sas_token.sas_url_query_string} ' -u ubuntu ./ansible/playbook.yml -vvv
+    sleep 300 && ansible-playbook --ssh-extra-args='-o StrictHostKeyChecking=no' -i '${module.prod_instance_1.instance_public_ip},' -e 'private_key=~/.ssh/id_rsa domain_name=${module.cloudflare_domain_terraform.domain_name} ssl_email=${var.certbot-ssl-email} gitrepo=${var.git_repo_https_url} git_branch=${var.git_repo_application_branch} git_token=${var.github_token} db_host=${module.prod_rds_mysql.db_endpoint} db_user=${var.rds_prod_db_username}  db_password=${var.rds_prod_db_password} azureStorageAccountName=${module.backup_storage_account.storage_account_name} db_database=${var.database_name} azureContainerName=${module.azure_storage_container.container_name} sas_token=${module.databackup1000_sas_token.sas_url_query_string} ' -u ubuntu ./ansible/playbook.yml -vvv
   EOT
   }
 }
