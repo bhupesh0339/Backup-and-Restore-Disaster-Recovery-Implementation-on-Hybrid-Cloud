@@ -6,7 +6,7 @@ This project aims to provide a robust and scalable solution for disaster recover
 
 ### Branch Structure
 
-The project is organized into 2 branches major directories:
+The project is organized into  2 major branches:
 
 1. **development:** contains nodejs application which input current date and time in mysql database
 2.  **infrastructure_development:** Terraform code for main infrastructure and recovery infrastructure
@@ -35,7 +35,6 @@ Ensure your local machine meets the following technology stack requirements:
 
 ![](.main.gif)
 
-
 1. Navigate to the `main_infrastructure` directory in infrastructure_development branch
 2. Rename `terraform.tfvars.sample` to `terraform.tfvars`.
 3. Add all necessary credentials in `terraform.tfvars`.
@@ -43,17 +42,19 @@ Ensure your local machine meets the following technology stack requirements:
 Run the following commands:
 
 ```bash
+cd main_infrastructure
 terraform init
 terraform plan
 terraform apply
 ```
-### Disaster Recovery Procedure
+### Disaster Recovery
 
 ![](.recovery.gif)
 
 #### In case of a disaster, switch to the recovery_infrastructure directory.
 
 ```bash
+cd recovery_infrastructure
 terraform init
 terraform plan --var-file ../main_infrastructure/terraform.tfvars
 terraform apply --var-file ../main_infrastructure/terraform.tfvars
