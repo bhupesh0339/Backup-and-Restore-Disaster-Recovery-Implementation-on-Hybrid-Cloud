@@ -4,6 +4,8 @@
 
 This project aims to provide a robust and scalable solution for disaster recovery by implementing a hybrid cloud approach. Leveraging the power of Terraform, AWS Cloud, Azure Cloud, Cloudflare, Ansible, Python, ShellScripts, Nginx, Certbot, Node.js, AWS RDS MySQL, and Azure MySQL DB, the Backup and Restore Disaster Recovery Implementation ensures the continuity of critical applications in the event of a disaster.
 
+
+
 ### Branch Structure
 
 The project is organized into  2 major branches:
@@ -59,3 +61,11 @@ terraform init
 terraform plan --var-file ../main_infrastructure/terraform.tfvars
 terraform apply --var-file ../main_infrastructure/terraform.tfvars
 ```
+
+
+
+## Additional Improvements Pending
+
+
+
+
