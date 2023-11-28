@@ -114,7 +114,7 @@ resource "aws_lambda_function" "backup_mysql_lambda" {
   runtime          = "python3.9"
   handler = "lambda_function.lambda_handler"
   timeout = "30"
-  filename         = "./dbdump_lambda_function/lambda.zip"
+  filename         = "./dbdump_lambda_function/my-deployment-package.zip"
   role             = aws_iam_role.lambda_execution_role.arn
   environment {
     variables = {
