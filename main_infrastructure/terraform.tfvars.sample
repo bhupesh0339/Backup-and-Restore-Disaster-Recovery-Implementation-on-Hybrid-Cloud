@@ -4,17 +4,19 @@ aws-region-main                   = ""
 cloudflare-api-token-value        = ""
 cloudflare-zone-id                = ""
 rds_prod_db_password              = ""
+#### RDS passwpord should not contain these characters '/', '@', '"', ' ' may be used.
 rds_prod_db_username              = ""
 database_name                     = ""
 certbot-ssl-email                 = ""
-git_repo_https_url                = ""
 git_repo_application_branch       = ""
 github_token                      = ""
+domain_name                       = ""
+git_repo_https_url                = ""
+
 
 
 ###################  Recovery Infrastructure Variables
-
-azure_db_password           = ""
-azure_db_username           = ""
-backup_storage_account_name = ""
-backup_container_name       = ""
+azure_db_password                 = ""
+azure_db_username                 = ""
+backup_storage_account_name       = ""
+backup_container_name             = ""

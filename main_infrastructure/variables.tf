@@ -20,3 +20,4 @@ variable "backup_storage_account_name" {}
 variable "backup_container_name" {}
 variable "azure_db_password" {}
 variable "azure_db_username" {}
+variable "domain_name" {}
