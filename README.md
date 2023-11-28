@@ -66,6 +66,10 @@ terraform apply --var-file ../main_infrastructure/terraform.tfvars
 
 ## Additional Improvements Pending
 
+This project serves as a basic prototype. In a production environment, we may explore using Kubernetes (EKS) with Karpenter. While the current setup may not be scalable, it effectively showcases a fully automated infrastructure that requires no manual intervention whatsoever.
+
+
+
 
 
 
