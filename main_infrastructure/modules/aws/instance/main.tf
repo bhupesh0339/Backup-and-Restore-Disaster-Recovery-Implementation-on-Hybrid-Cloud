@@ -1,12 +1,19 @@
-resource "aws_eip" "eip" {
-  instance = aws_instance.Instance1.id
-  domain   = "vpc"
-}
 resource "aws_instance" "Instance1" {
   ami                    = data.aws_ami.backend_ami.id
   instance_type          = var.instance-type
   key_name               = var.key_pair_name
   vpc_security_group_ids = var.vpc_security_group_ids
+  connection {
+    type        = "ssh"
+    host        = self.public_ip
+    user        = "ubuntu"
+    private_key = var.private_key_file
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update"
+    ]
+  }  
   tags = {
     Name = var.InstanceNameTag
   }

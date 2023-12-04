@@ -1,5 +1,5 @@
 terraform {
-  required_version = "> 1.6.1"
+  required_version = "> 1.5.6"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -29,7 +29,7 @@ provider "cloudflare" {
 }
 module "azure_backup_resource_group" {
   source                          = "./modules/azure/resource_group"
-  azurerm_resource_group-name     = "databackup1000"
+  azurerm_resource_group-name     = "databackup10000"
   azurerm_resource_group-location = "West Europe"
 }
 module "backup_storage_account" {
@@ -63,12 +63,12 @@ module "prod_rds_mysql" {
 }
 module "production_instance_1_keypair" {
   source         = "./modules/aws/key_pair"
-  key_pair_name  = "production_instance_1_keypair"
-  public_ssh_key = file("~/.ssh/id_rsa.pub")
+  key_pair_name  = "production_instance_1_keypair1"
+  public_ssh_key = file("~/.ssh/id_ed25519.pub")
 }
 module "prod_instance_security_group" {
   source                    = "./modules/aws/security_group"
-  security_group_name       = "prod_instance_security_group"
+  security_group_name       = "prod_instance_security_group1"
   security_group_open_ports = [80, 443, 22]
 }
 module "cloudflare_domain_terraform" {
@@ -81,7 +81,7 @@ module "cloudflare_domain_terraform" {
 }
 module "rds_security_group" {
   source                    = "./modules/aws/security_group"
-  security_group_name       = "rds_public_security_group"
+  security_group_name       = "rds_public_security_group1"
   security_group_open_ports = [3306]
 }
 module "prod_instance_1" {
@@ -89,13 +89,14 @@ module "prod_instance_1" {
   instance-type          = "t2.large"
   key_pair_name          = module.production_instance_1_keypair.keypair_name
   vpc_security_group_ids = [module.prod_instance_security_group.security_group_id]
-  InstanceNameTag        = "Prod_Instance_1"
+  InstanceNameTag        = "Prod_Instance_11"
+  private_key_file       = file("~/.ssh/id_ed25519")
 }
-resource "null_resource" "configure_instance_2" {
+resource "null_resource" "configure_instance_1" {
   depends_on = [module.prod_instance_1]
   provisioner "local-exec" {
     command = <<-EOT
-    sleep 300 && ansible-playbook --ssh-extra-args='-o StrictHostKeyChecking=no' -i '${module.prod_instance_1.instance_public_ip},' -e 'private_key=~/.ssh/id_rsa domain_name=${module.cloudflare_domain_terraform.domain_name} ssl_email=${var.certbot-ssl-email} gitrepo=${var.git_repo_https_url} git_branch=${var.git_repo_application_branch} git_token=${var.github_token} db_host=${module.prod_rds_mysql.db_endpoint} db_user=${var.rds_prod_db_username}  db_password=${var.rds_prod_db_password} azureStorageAccountName=${module.backup_storage_account.storage_account_name} db_database=${var.database_name} azureContainerName=${module.azure_storage_container.container_name} sas_token=${module.databackup1000_sas_token.sas_url_query_string} ' -u ubuntu ./ansible/playbook.yml -vvv
+    sleep 100 && ansible-playbook --ssh-extra-args='-o StrictHostKeyChecking=no' -i '${module.prod_instance_1.instance_public_ip},' -e 'private_key=~/.ssh/id_ed25519 domain_name=${module.cloudflare_domain_terraform.domain_name} ssl_email=${var.certbot-ssl-email} gitrepo=${var.git_repo_https_url} git_branch=${var.git_repo_application_branch} git_token=${var.github_token} db_host=${module.prod_rds_mysql.db_endpoint} db_user=${var.rds_prod_db_username}  db_password=${var.rds_prod_db_password} azureStorageAccountName=${module.backup_storage_account.storage_account_name} db_database=${var.database_name} azureContainerName=${module.azure_storage_container.container_name} sas_token=${module.databackup1000_sas_token.sas_url_query_string} ' -u ubuntu ./ansible/playbook.yml -vvv
   EOT
   }
 }
@@ -110,26 +111,27 @@ locals {
 }
 
 resource "aws_lambda_function" "backup_mysql_lambda" {
-  function_name    = "backup_mysql_dump"
-  runtime          = "python3.9"
-  handler = "lambda_function.lambda_handler"
-  timeout = "30"
-  filename         = "./dbdump_lambda_function/my-deployment-package.zip"
-  role             = aws_iam_role.lambda_execution_role.arn
+  function_name = "backup_mysql_dump1"
+  runtime       = "python3.9"
+  handler       = "lambda_function.lambda_handler"
+  timeout       = "30"
+  filename      = "./dbdump_lambda_function/my-deployment-package.zip"
+  role          = aws_iam_role.lambda_execution_role.arn
   environment {
     variables = {
-      DB_HOST              = local.db_endpoint_without_port,
-      DB_USER              = var.rds_prod_db_username,
-      DB_PASSWORD          = var.rds_prod_db_password,
-      DB_NAME              = var.database_name,
-      azure_sas_token      = module.databackup1000_sas_token.sas_url_query_string,
+      DB_HOST                 = local.db_endpoint_without_port,
+      DB_USER                 = var.rds_prod_db_username,
+      DB_PASSWORD             = var.rds_prod_db_password,
+      DB_NAME                 = var.database_name,
+      azure_sas_token         = module.databackup1000_sas_token.sas_url_query_string,
       azureStorageAccountName = module.backup_storage_account.storage_account_name,
-      azureContainerName   = module.azure_storage_container.container_name,
+      azureContainerName      = module.azure_storage_container.container_name,
     }
   }
+depends_on = [module.prod_rds_mysql, module.azure_storage_container, module.backup_storage_account]
 }
 resource "aws_scheduler_schedule" "invoke_lambda" {
-  name       = "create_dump_sch"
+  name       = "create_dump_sch1"
   group_name = "default"
   flexible_time_window {
     mode = "OFF"
@@ -139,5 +141,5 @@ resource "aws_scheduler_schedule" "invoke_lambda" {
     arn      = aws_lambda_function.backup_mysql_lambda.arn
     role_arn = aws_iam_role.lambda_invoke_schedular_role.arn
   }
-depends_on = [ aws_lambda_function.backup_mysql_lambda ]
+  depends_on = [aws_lambda_function.backup_mysql_lambda]
 }
