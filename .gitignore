@@ -27,6 +27,7 @@ main_infrastructure/*_override.tf.json
 main_infrastructure/.terraformrc
 main_infrastructure/terraform.rc
 main_infrastructure/.DS_Store
+main_infrastructure/terraform.lock.hcl
 recovery_infrastructure/sas_token
 recovery_infrastructure/ansible/.DS_Store
 recovery_infrastructure/ansible/.DS_Store
@@ -45,4 +46,4 @@ recovery_infrastructure/.terraformrc
 recovery_infrastructure/terraform.rc
 recovery_infrastructure/.DS_Store
 recovery_infrastructure/sas_token
-recovery_infrastructure/*.terraform.lock.hcl
+recovery_infrastructure/terraform.lock.hcl
