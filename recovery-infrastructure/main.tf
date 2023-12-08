@@ -1,5 +1,5 @@
 terraform {
-  required_version = "> 1.6.1"
+  required_version = "> 1.5.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -83,7 +83,7 @@ module "azure_prod_vm1" {
 module "cloudflare-domain" {
   source                  = "./cloudflare"
   cloudflare-zone-id      = var.cloudflare-zone-id
-  cloudflare-domain-name  = "azure.testmyinfra.com"
+  cloudflare-domain-name  = "web"
   cloudflare-ipv4-address = module.azure_prod_vm1.vm_public_ip
   cloudflare-record-type  = "A"
   cloudflare-record-ttl   = "300"
@@ -95,6 +95,6 @@ locals {
 resource "null_resource" "setup_vm_prod3" {
   depends_on = [module.azure_prod_vm1]
   provisioner "local-exec" {
-    command = "ansible-playbook --ssh-extra-args='-o StrictHostKeyChecking=no' -i '${module.azure_prod_vm1.vm_public_ip},' -e 'domain_name=${module.cloudflare-domain.domain_name} ssl_email=${var.certbot-ssl-email} gitrepo=${var.git_repo_https_url} git_branch=${var.git_repo_application_branch}  git_token=${var.github_token} db_host=${module.azure-mysql-db.production-db-endpoint} db_user=${var.azure_db_username}  db_password=${var.azure_db_password} azureStorageAccountName=${var.backup_storage_account_name} db_database=${var.database_name} azureContainerName=${var.backup_container_name} sas_token=${local.sas_token} ' -u ${module.azure_prod_vm1.vm_username} ./ansible/playbook.yml -vvv"
+    command = "ansible-playbook --ssh-extra-args='-o StrictHostKeyChecking=no' -i '${module.azure_prod_vm1.vm_public_ip},' -e ' private_key=~/.ssh/id_rsa domain_name=${module.cloudflare-domain.domain_name} ssl_email=${var.certbot-ssl-email} gitrepo=${var.git_repo_https_url} git_branch=${var.git_repo_application_branch}  git_token=${var.github_token} db_host=${module.azure-mysql-db.production-db-endpoint} db_user=${var.azure_db_username}  db_password=${var.azure_db_password} azureStorageAccountName=${var.backup_storage_account_name} db_database=${var.database_name} azureContainerName=${var.backup_container_name} sas_token=${local.sas_token} ' -u ${module.azure_prod_vm1.vm_username} ./ansible/playbook.yml -vvv"
   }
 }

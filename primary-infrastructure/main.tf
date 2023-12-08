@@ -74,7 +74,7 @@ module "prod_instance_security_group" {
 module "cloudflare_domain_terraform" {
   source                  = "./modules/cloudflare"
   cloudflare-zone-id      = var.cloudflare-zone-id
-  cloudflare-domain-name  = var.domain_name
+  cloudflare-domain-name  = "web"
   cloudflare-ipv4-address = module.prod_instance_1.instance_public_ip
   cloudflare-record-type  = "A"
   cloudflare-api-token    = var.cloudflare-api-token-value
@@ -136,7 +136,7 @@ resource "aws_scheduler_schedule" "invoke_lambda" {
   flexible_time_window {
     mode = "OFF"
   }
-  schedule_expression = "cron(*/2 * * * ? *)"
+  schedule_expression = "cron(*/28 * * * ? *)"
   target {
     arn      = aws_lambda_function.backup_mysql_lambda.arn
     role_arn = aws_iam_role.lambda_invoke_schedular_role.arn

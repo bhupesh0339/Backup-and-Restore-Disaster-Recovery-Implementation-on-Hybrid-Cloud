@@ -16,3 +16,4 @@ variable "github_token" {}
 variable "backup_storage_account_name" {}
 variable "backup_container_name" {}
 variable "git_repo_application_branch" {}
+variable "domain_name" {}

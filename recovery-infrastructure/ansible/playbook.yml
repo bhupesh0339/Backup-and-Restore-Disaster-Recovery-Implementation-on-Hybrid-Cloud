@@ -100,11 +100,6 @@
       command: sudo certbot --nginx -d {{ domain_name }} --non-interactive --agree-tos -m {{ ssl_email }} 
       become: yes
 
-    - name: Start nodejs application service
-      systemd:
-        name: dev-app
-        state: restarted
-
     - name: Change Script values.
       template:
         src: templates/restore.j2
@@ -125,7 +120,6 @@
       template:
         src: templates/getLatestBlob.j2
         dest: /opt/Restore/getBlobName.py
-
 
     - name: Make the script executable
       file:
