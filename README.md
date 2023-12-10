@@ -1,9 +1,8 @@
-# Backup and Restore Disaster Recovery Implementation on Hybrid Cloud
+# Achieving Rapid Disaster Recovery with Infrastructure as Code (IaC) in a Hybrid Cloud Environment
 
 ## Overview
 
-This project aims to provide a robust and scalable solution for disaster recovery by implementing a hybrid cloud approach. Leveraging the power of Terraform, AWS Cloud, Azure Cloud, Cloudflare, Ansible, Python, ShellScripts, Nginx, Certbot, Node.js, AWS RDS MySQL, and Azure MySQL DB, the Backup and Restore Disaster Recovery Implementation ensures the continuity of critical applications in the event of a disaster.
-
+The aim of this project is to implement a backup and restore disaster recovery (disaster recovery) solution using an infrastructure as code (IaC) tool to achieve rapid recovery in a hybrid cloud environment. The project specifically focuses on leveraging Terraform to automate infrastructure provisioning, application deployment, and configuration management in a hybrid cloud environment where the primary infrastructure resides on Amazon Web Services (AWS) and the recovery infrastructure is hosted on Microsoft Azure. The goal is to establish a comprehensive disaster recovery solution that meets stringent recovery time objectives (RTO) and recovery point objectives (RPO) of 30 Minutes.
 
 
 ### Branch Structure
@@ -11,7 +10,7 @@ This project aims to provide a robust and scalable solution for disaster recover
 The project is organized into  2 major branches:
 
 1. **development:** contains nodejs application which input current date and time in mysql database
-2.  **infrastructure_development:** Terraform code for main infrastructure and recovery infrastructure
+2.  **infrastructure_development:** Terraform code for primary infrastructure and recovery infrastructure
 
      
 ### Code Structure
@@ -20,56 +19,50 @@ The project is organized into  2 major branches:
 
 ## infrastructure_development branch contains 2 directories
 
-1. **main_infrastructure:** Contains Terraform code for the main infrastructure on AWS.
-2. **recovery_infrastructure:** Holds Terraform code for the recovered infrastructure on Azure.
+1. **primary-infrastructure:** Contains Terraform code for the primary infrastructure on AWS.
+2. **recovery-infrastructure:** Holds Terraform code for the recovered infrastructure on Azure.
 
 
 ## Local Development Requirements
 
 Ensure your local machine meets the following technology stack requirements:
 
-- **Terraform:** Version 1.6.3 or higher, enforced within Terraform code using `required_version`.
-- **Ansible:** Version 2.15.6 or higher.
+- **Terraform:** Version 1.4.0 or higher, enforced within Terraform code using `required_version`.
+- **Ansible:** Version 2.0.6 or higher.
 
 ## Getting Started
 
-### Setting up main Infrastructure on AWS
+### Setting up primary Infrastructure on AWS
 
-![](.main.gif)
+![](.primary.png)
 
-1. Navigate to the `main_infrastructure` directory in infrastructure_development branch
+1. Navigate to the `primary-infrastructure` directory in infrastructure_development branch
 2. Rename `terraform.tfvars.sample` to `terraform.tfvars`.
 3. Add all necessary credentials in `terraform.tfvars`.
 
 Run the following commands:
 
 ```bash
-cd main_infrastructure
+cd primary-infrastructure
 terraform init
 terraform plan
 terraform apply
 ```
 ### Disaster Recovery
 
-![](.recovery.gif)
+![](.recovery.png)
 
-#### In case of a disaster, switch to the recovery_infrastructure directory.
+#### In case of a disaster, switch to the recovery-infrastructure directory.
 
 ```bash
-cd recovery_infrastructure
+cd recovery-infrastructure
 terraform init
-terraform plan --var-file ../main_infrastructure/terraform.tfvars
-terraform apply --var-file ../main_infrastructure/terraform.tfvars
+terraform plan --var-file ../primary-infrastructure/terraform.tfvars
+terraform apply --var-file ../primary-infrastructure/terraform.tfvars
 ```
-
 
 
 ## Additional Improvements Pending
 
-This project serves as a basic prototype. In a production environment, we may explore using Kubernetes (EKS) with Karpenter. While the current setup may not be scalable, it effectively showcases a fully automated infrastructure that requires no manual intervention whatsoever.
-
-
-
-
-
+This project serves as a basic prototype. In a production environment, we may explore using Kubernetes. While the current setup may not be scalable, it effectively showcases a fully automated infrastructure that requires no manual intervention whatsoever.
 
